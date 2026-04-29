@@ -2,16 +2,48 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  color-scheme: light;
+@layer base {
+  :root {
+    --background: 120 20% 98%; /* soft cream/green tint */
+    --foreground: 140 30% 15%;
+    
+    --card: 0 0% 100%;
+    --card-foreground: 140 30% 15%;
+    
+    --popover: 0 0% 100%;
+    --popover-foreground: 140 30% 15%;
+    
+    --primary: 142 76% 36%; /* #16a34a */
+    --primary-foreground: 0 0% 100%;
+    
+    --secondary: 140 20% 90%;
+    --secondary-foreground: 140 30% 15%;
+    
+    --muted: 140 20% 90%;
+    --muted-foreground: 140 10% 40%;
+    
+    --accent: 140 20% 90%;
+    --accent-foreground: 140 30% 15%;
+    
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 140 20% 85%;
+    --input: 140 20% 85%;
+    --ring: 142 76% 36%;
+
+    --radius: 0.75rem;
+  }
 }
 
-html,
-body,
-#root {
-  height: 100%;
-}
-
-body {
-  @apply bg-slate-50 font-sans text-slate-800 antialiased;
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+  }
 }

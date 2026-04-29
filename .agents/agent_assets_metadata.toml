@@ -1,0 +1,8 @@
+uploads = []
+outputs = []
+
+[[generated]]
+id = "3-xz8wUYh8ZzoiDpObEY1"
+uri = "file://src/assets/images/hero-map.png"
+type = "image"
+title = "Abstract tech agriculture dashboard map"
