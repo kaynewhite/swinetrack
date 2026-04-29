@@ -24,7 +24,7 @@ this repo yet.
 - **react-router-dom 6** for routing
 - **framer-motion** for scroll/entrance animations on the landing page
 - **lucide-react** for icons (no emojis used in the UI, by design)
-- **@supabase/supabase-js** for authentication
+- Local browser storage for auth (no backend yet)
 
 ## Project layout
 
@@ -34,7 +34,7 @@ src/
   App.tsx               # routes (/, /login, /signup)
   index.css             # tailwind layers + HSL theme variables
   lib/
-    supabase.ts         # supabase client + isSupabaseConfigured flag
+    auth.ts             # localStorage-backed signUp / signIn / session
   components/           # Navbar, Footer, Logo, AuthLayout
   pages/                # LandingPage, LoginPage, SignupPage
   assets/images/        # generated hero imagery
@@ -43,22 +43,28 @@ public/
 swinetrack/             # reference dashboard screenshots (read-only)
 ```
 
-## Authentication
+## Authentication (local, demo only)
 
-`src/lib/supabase.ts` reads `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY`
-from Vite env. If either is missing, `isSupabaseConfigured` is `false` and the
-auth pages render an inline "Authentication is being configured" notice instead
-of crashing.
+Auth lives entirely in the browser via `src/lib/auth.ts`. Accounts and the
+active session are stored in `localStorage` — no backend, no API keys, no
+external services.
 
-Auth calls used by the pages:
+Public API:
 
-- `supabase.auth.signInWithPassword({ email, password })`
-- `supabase.auth.signUp({ email, password, options: { data: { full_name, account_type }, emailRedirectTo } })`
-- `supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo } })`
+- `signUp({ fullName, email, password, accountType })` → `SessionUser`
+- `signIn({ email, password })` → `SessionUser`
+- `signOut()`
+- `getCurrentUser()` → `SessionUser | null`
 
-For Google OAuth to work, the Google provider must be enabled in the Supabase
-dashboard: **Authentication → Providers → Google**, and the Replit dev domain
-must be added to the allowed redirect URLs.
+Storage keys:
+
+- `swinetrack.accounts.v1` — array of `StoredAccount` records
+- `swinetrack.session.v1` — currently signed-in user
+
+This is **for the capstone demo only** — passwords are stored as a fast
+non-cryptographic hash and accounts only exist in the current browser.
+Replace with a real auth provider (Supabase, Replit Auth, custom backend +
+Postgres + bcrypt) before any production use.
 
 ## Dev / Replit setup
 
