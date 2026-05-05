@@ -4,6 +4,7 @@ import cors from "cors";
 import { clerk } from "./middleware/auth";
 import { createSchema } from "./db/schema";
 
+import authRouter from "./routes/auth";
 import usersRouter from "./routes/users";
 import farmsRouter from "./routes/farms";
 import diseasesRouter from "./routes/diseases";
@@ -16,6 +17,13 @@ const PORT = process.env.PORT || 3001;
 
 app.use(cors({ origin: true, credentials: true }));
 app.use(express.json());
+
+app.get("/api/health", (_req, res) => {
+  res.json({ status: "ok", timestamp: new Date().toISOString() });
+});
+
+app.use("/api/auth", authRouter);
+
 app.use(clerk);
 
 app.use("/api/users", usersRouter);
@@ -24,10 +32,6 @@ app.use("/api/diseases", diseasesRouter);
 app.use("/api/permits", permitsRouter);
 app.use("/api/analytics", analyticsRouter);
 app.use("/api/map", mapRouter);
-
-app.get("/api/health", (_req, res) => {
-  res.json({ status: "ok", timestamp: new Date().toISOString() });
-});
 
 app.use((err: any, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
   console.error(err);

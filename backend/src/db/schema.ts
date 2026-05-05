@@ -10,6 +10,7 @@ export async function createSchema() {
       role TEXT NOT NULL CHECK (role IN ('farm_owner','mao','pao','veterinarian')),
       municipality TEXT,
       contact_number TEXT,
+      password_hash TEXT,
       created_at TIMESTAMPTZ DEFAULT NOW()
     );
 
@@ -112,6 +113,10 @@ export async function createSchema() {
       recorded_at TIMESTAMPTZ DEFAULT NOW(),
       UNIQUE(municipality, month, year)
     );
+  `);
+
+  await pool.query(`
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS password_hash TEXT;
   `);
 
   console.log("Schema created successfully.");

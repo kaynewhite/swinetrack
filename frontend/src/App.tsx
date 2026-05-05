@@ -1,5 +1,6 @@
 import { Routes, Route, Navigate } from "react-router-dom";
 import { useAuth } from "@clerk/clerk-react";
+import { getPAOSession } from "./lib/paoAuth";
 
 import LandingPage from "./pages/landing/LandingPage";
 import FarmLogin from "./pages/landing/FarmLogin";
@@ -36,8 +37,20 @@ import VetInspections from "./pages/vet/VetInspections";
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { isSignedIn, isLoaded } = useAuth();
-  if (!isLoaded) return <div className="min-h-screen flex items-center justify-center"><div className="w-8 h-8 border-4 border-brand-600 border-t-transparent rounded-full animate-spin" /></div>;
+  if (!isLoaded) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="w-8 h-8 border-4 border-brand-600 border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
   if (!isSignedIn) return <Navigate to="/" replace />;
+  return <>{children}</>;
+}
+
+function PAOProtectedRoute({ children }: { children: React.ReactNode }) {
+  const session = getPAOSession();
+  if (!session) return <Navigate to="/PAO-login" replace />;
   return <>{children}</>;
 }
 
@@ -71,12 +84,12 @@ export default function App() {
       <Route path="/mao/reports" element={<ProtectedRoute><MAOReports /></ProtectedRoute>} />
       <Route path="/mao/training-data" element={<ProtectedRoute><MAOTrainingData /></ProtectedRoute>} />
 
-      {/* PAO */}
-      <Route path="/pao" element={<ProtectedRoute><PAODashboard /></ProtectedRoute>} />
-      <Route path="/pao/supply" element={<ProtectedRoute><PAOSupply /></ProtectedRoute>} />
-      <Route path="/pao/diseases" element={<ProtectedRoute><PAODiseases /></ProtectedRoute>} />
-      <Route path="/pao/map" element={<ProtectedRoute><PAOMap /></ProtectedRoute>} />
-      <Route path="/pao/reports" element={<ProtectedRoute><PAOReports /></ProtectedRoute>} />
+      {/* PAO — custom auth, not Clerk */}
+      <Route path="/pao" element={<PAOProtectedRoute><PAODashboard /></PAOProtectedRoute>} />
+      <Route path="/pao/supply" element={<PAOProtectedRoute><PAOSupply /></PAOProtectedRoute>} />
+      <Route path="/pao/diseases" element={<PAOProtectedRoute><PAODiseases /></PAOProtectedRoute>} />
+      <Route path="/pao/map" element={<PAOProtectedRoute><PAOMap /></PAOProtectedRoute>} />
+      <Route path="/pao/reports" element={<PAOProtectedRoute><PAOReports /></PAOProtectedRoute>} />
 
       {/* Veterinarian */}
       <Route path="/vet" element={<ProtectedRoute><VetDashboard /></ProtectedRoute>} />
