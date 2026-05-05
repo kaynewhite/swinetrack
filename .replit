@@ -18,18 +18,44 @@ author = "agent"
 task = "workflow.run"
 args = "Start application"
 
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "Backend API"
+
 [[workflows.workflow]]
 name = "Start application"
 author = "agent"
 
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "npm run dev"
-waitForPort = 5000
-
 [workflows.workflow.metadata]
 outputType = "webview"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "VITE_CLERK_PUBLISHABLE_KEY=$CLERK_PUBLISHABLE_KEY CLERK_SECRET_KEY=$CLERK_SECRET_KEY NEON_DATABASE_URL=$NEON_DATABASE_URL bash -c 'cd backend && npm run dev &' && cd frontend && VITE_CLERK_PUBLISHABLE_KEY=$CLERK_PUBLISHABLE_KEY npm run dev"
+waitForPort = 5000
+
+[[workflows.workflow]]
+name = "Backend API"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "cd backend && CLERK_SECRET_KEY=$CLERK_SECRET_KEY NEON_DATABASE_URL=$NEON_DATABASE_URL npm run dev"
+waitForPort = 3001
+
+[workflows.workflow.metadata]
+outputType = "console"
+
+[[ports]]
+localPort = 3001
+externalPort = 3001
 
 [[ports]]
 localPort = 5000
 externalPort = 80
+
+[userenv]
+
+[userenv.shared]
+PORT = "3001"
+NODE_ENV = "development"

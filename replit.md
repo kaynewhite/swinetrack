@@ -1,83 +1,85 @@
-# SwineTrack — Web
+# SwineTrack — Farm-to-Market Swine Traceability System
 
-Public-facing web pages for **SwineTrack: A Web and Mobile-Based Farm-to-Market
-Swine Traceability System with Predictive and Prescriptive Analytics** (capstone
-project, Laguna Province pilot).
+## Project Overview
+Full PERN stack (PostgreSQL/Neon + Express + React + Node.js) swine health traceability system for Laguna Province, Philippines. Features ARIMA + Random Forest predictive analytics, rule-based prescriptive recommendations, and role-based dashboards.
 
-## Scope (current build)
+## Architecture
 
-Three pages, no backend of our own — Supabase handles auth.
+### Frontend (`frontend/`)
+- React 18 + Vite + TypeScript + Tailwind CSS
+- Clerk React SDK for authentication
+- React Router v6 for routing
+- Recharts for data visualization
+- Framer Motion for animations
+- Port: **5000**
 
-- `/`        — marketing landing page
-- `/login`   — sign in (email + password, "Continue with Google")
-- `/signup`  — register (full name, email, password, account type, Google OAuth)
+### Backend (`backend/`)
+- Express + TypeScript
+- Clerk Express SDK middleware (JWT verification)
+- pg (node-postgres) connected to Neon PostgreSQL
+- ARIMA time-series forecasting engine
+- Random Forest ensemble classifier
+- Rule-based prescriptive analytics engine
+- Port: **3001**
+- Frontend Vite proxies `/api` → `localhost:3001`
 
-The internal MAO/PAO dashboards shown in `swinetrack/mao/*.png` and
-`swinetrack/pao/*.png` are reference material only — they are NOT implemented in
-this repo yet.
+## Authentication
+- Uses Clerk (CLERK_PUBLISHABLE_KEY, CLERK_SECRET_KEY secrets)
+- After Clerk sign-in, user syncs to `users` table via `POST /api/users/sync`
+- JWT Bearer token required on all protected routes
+- `VITE_CLERK_PUBLISHABLE_KEY` is injected at runtime in the workflow command
 
-## Stack
+## Database
+- Neon PostgreSQL (NEON_DATABASE_URL secret — has `//` prefix, fixed in pool.ts)
+- Schema auto-created on backend startup via `createSchema()`
+- Tables: users, farms, disease_reports, forecasts, recommendations, permits, model_training_data, supply_data
 
-- **Vite 5** + **React 18** + **TypeScript**
-- **Tailwind CSS 3** with shadcn-style HSL CSS variables (see
-  `src/index.css` + `tailwind.config.js`)
-- **react-router-dom 6** for routing
-- **framer-motion** for scroll/entrance animations on the landing page
-- **lucide-react** for icons (no emojis used in the UI, by design)
-- Local browser storage for auth (no backend yet)
+## Roles & Routes
+| Role | Login Route | Dashboard | Notes |
+|------|------------|-----------|-------|
+| Farm Owner | /farm-login, /farm-signup | /farm/* | Clerk-based auth |
+| MAO Admin | /mao-login | /mao/* | Clerk-based auth |
+| Veterinarian | /vet-login, /vet-signup | /vet/* | Clerk-based auth |
+| PAO Monitor | /PAO-login (hidden) | /pao/* | Clerk-based auth, seeded DB account |
 
-## Project layout
+## Seeded Accounts
+- **PAO**: `pao@swinetrack.laguna.gov.ph` (DB record only, sign in via Clerk at /PAO-login)
 
+## Workflow
+Single "Start application" workflow runs both services:
 ```
-src/
-  main.tsx              # entry, BrowserRouter
-  App.tsx               # routes (/, /login, /signup)
-  index.css             # tailwind layers + HSL theme variables
-  lib/
-    auth.ts             # localStorage-backed signUp / signIn / session
-  components/           # Navbar, Footer, Logo, AuthLayout
-  pages/                # LandingPage, LoginPage, SignupPage
-  assets/images/        # generated hero imagery
-public/
-  favicon.svg           # green-square pig glyph (matches dashboard wordmark)
-swinetrack/             # reference dashboard screenshots (read-only)
+bash -c 'cd backend && npm run dev &' && cd frontend && VITE_CLERK_PUBLISHABLE_KEY=$CLERK_PUBLISHABLE_KEY npm run dev
 ```
 
-## Authentication (local, demo only)
+## Features Built
+- ✅ Landing page with hero, features, role portals, stats
+- ✅ Separate login/signup pages per role
+- ✅ Farm Owner: Dashboard, Farm Registration, Disease Reporting, Map View, Permits, Profile
+- ✅ MAO: Dashboard, Farm Management, Disease Cases, Map Monitoring, Permit Management, Prescriptive System (run ARIMA+RF forecast), Reports & Analytics, Training Data Input
+- ✅ PAO: Dashboard, Supply Monitoring, Disease Overview, Map Monitoring, Reports
+- ✅ Veterinarian: Dashboard, Field Inspections
+- ✅ ARIMA (p=2,d=1,q=2) forecasting engine
+- ✅ Random Forest ensemble disease risk classifier
+- ✅ Rule-based prescriptive recommendations engine
+- ✅ Full REST API with Clerk JWT auth on all protected endpoints
 
-Auth lives entirely in the browser via `src/lib/auth.ts`. Accounts and the
-active session are stored in `localStorage` — no backend, no API keys, no
-external services.
+## Key Files
+- `frontend/src/App.tsx` — all routes
+- `frontend/src/main.tsx` — Clerk provider + BrowserRouter
+- `frontend/src/lib/api.ts` — API client with Bearer token
+- `frontend/src/lib/constants.ts` — municipalities, disease lists
+- `frontend/src/components/shared/DashboardLayout.tsx` — sidebar layout
+- `backend/src/index.ts` — Express entry + route mounting
+- `backend/src/db/schema.ts` — full DB schema (auto-created)
+- `backend/src/db/seed.ts` — PAO account seed
+- `backend/src/analytics/arima.ts` — ARIMA implementation
+- `backend/src/analytics/randomForest.ts` — RF classifier
+- `backend/src/analytics/prescriptive.ts` — rule-based engine
+- `backend/src/middleware/auth.ts` — Clerk middleware + requireRole
 
-Public API:
-
-- `signUp({ fullName, email, password, accountType })` → `SessionUser`
-- `signIn({ email, password })` → `SessionUser`
-- `signOut()`
-- `getCurrentUser()` → `SessionUser | null`
-
-Storage keys:
-
-- `swinetrack.accounts.v1` — array of `StoredAccount` records
-- `swinetrack.session.v1` — currently signed-in user
-
-This is **for the capstone demo only** — passwords are stored as a fast
-non-cryptographic hash and accounts only exist in the current browser.
-Replace with a real auth provider (Supabase, Replit Auth, custom backend +
-Postgres + bcrypt) before any production use.
-
-## Dev / Replit setup
-
-- Workflow `Start application` runs `npm run dev` on port **5000**.
-- `vite.config.ts` binds to `0.0.0.0:5000` with `allowedHosts: true` so the
-  Replit iframe proxy can serve the app.
-- HMR uses `wss://` on port 443 to work through the Replit HTTPS proxy.
-
-## Brand notes
-
-- Primary color: agriculture green `#16a34a` (`brand-600`).
-- Wordmark: pig glyph + "SwineTrack" — matches the green nav bar in the
-  reference dashboards.
-- Display type: **Plus Jakarta Sans**. Body type: **Inter**. Both loaded from
-  Google Fonts in `index.html`.
-- No emojis in UI — use `lucide-react` icons.
+## Environment Variables / Secrets
+- `CLERK_PUBLISHABLE_KEY` — Clerk publishable key (secret)
+- `CLERK_SECRET_KEY` — Clerk secret key (secret)
+- `NEON_DATABASE_URL` — Neon PostgreSQL connection string (secret, starts with `//`, fixed in pool.ts)
+- `PORT` — 3001 (shared env var)
+- `NODE_ENV` — development (shared env var)
